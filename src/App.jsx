@@ -120,18 +120,23 @@ export default function App() {
                 </div>
 
                 <div className="bio">
-                    Mortals call me Eddie, I weave stories through code. Tell me a story through the ethereum blockchain, or just say hi.
+                    Mortals call me Eddie, I weave stories into code. Tell me a story through the Ethereum blockchain, or just say hi.
                 </div>
-                <textarea placeholder="Tell me your story"
+                <textarea
+                    placeholder={currentAccount !== "" ? "Tell me your story" : "Connect to your ethereum wallet first."}
                     rows={4}
                     onChange={onFieldChange}
                     value={inputField}
-                    disabled={isLoading}
+                    disabled={isLoading || currentAccount === ""}
                 />
 
                 {isLoading ?
                     <Spinner color="white" /> :
-                    <button className="waveButton" onClick={post}>
+                    <button
+                        disabled={currentAccount === ""}
+                        className="waveButton"
+                        onClick={post}
+                    >
                         Post it!
                     </button>}
                 {!currentAccount && <button className="waveButton" onClick={connectWallet}>
