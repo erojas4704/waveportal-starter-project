@@ -11,9 +11,9 @@ export default function App() {
     const [currentAccount, setCurrentAccount] = useState("");
     const [inputField, setInputField] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [stories, setStories] = useState([]);
+    const [waves, setWaves] = useState([]);
 
-    const contractAddress = "0x3BB2F44E55421bF0Fc7627c4E381FbD11e20f499";
+    const contractAddress = "0x7c9ae82F11Cb2aa81faB3A324ad1Feb29A2D9b71";
     const contractABI = abi.abi;
 
 
@@ -66,12 +66,17 @@ export default function App() {
                 const provider = new ethers.providers.Web3Provider(ethereum);
                 const signer = provider.getSigner();
                 const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-
-                const stories = (await wavePortalContract.getAllStories())
+                const waves = (await wavePortalContract.getAllWaves())
                     .slice(0)
-                    .reverse();
+                    .reverse()
+                    .map(wave => ({
+                        address: wave.waver,
+                        timestamp: new Date(wave.timestamp * 1000),
+                        message: wave.message
+                    }));
+                //We reverse them so the newest are at the top.
 
-                setStories(stories); //Shorthand for
+                setWaves(waves);
             }
         } catch (err) {
             console.log(err);
@@ -89,15 +94,17 @@ export default function App() {
 
                 setIsLoading(true);
 
-                const waveTxn = await wavePortalContract.postStory(inputField);
+                const waveTxn = await wavePortalContract.wave(inputField, { gasLimit: 300000 });
                 console.log(`Mining...`, waveTxn.hash);
 
                 await waveTxn.wait();
                 console.log(`Mined -- ${waveTxn.hash}`);
 
                 setIsLoading(false);
+                setInputField("");
 
-                console.log(`Retrieved stories: ${await wavePortalContract.getAllStories()}`);
+                getStories();
+                //console.log(`Retrieved stories: ${await wavePortalContract.getAllWaves()}`);
             } else {
                 console.log("No ethereum");
                 setIsLoading(false);
@@ -111,6 +118,32 @@ export default function App() {
     useEffect(() => {
         checkIfWalletIsConnected();
         getStories();
+        let wavePortalContract;
+
+        const onNewWave = (from, timestamp, message) => {
+            console.log(`New wave from ${from} at ${timestamp} with message: ${message}`);
+            setWaves(waves => [
+                {
+                    address: from,
+                    timestamp: new Date(timestamp * 1000),
+                    message: message
+                },
+                ...waves
+            ]);
+        };
+
+        if(window.ethereum){
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+
+            wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+            wavePortalContract.on("NewWave", onNewWave);
+        }
+        return () => {
+            if(wavePortalContract){
+                wavePortalContract.off("NewWave", onNewWave);
+            }
+        }
     }, []);
 
     return (
@@ -144,10 +177,8 @@ export default function App() {
                     Connect Wallet
                 </button>}
 
-                {stories.map((story, index) => (
-                    <Story key={index} className="story">
-                        {story}
-                    </Story>
+                {waves.map((story, index) => (
+                    <Story key={index} className="story" story={story} />
                 ))}
             </div>
         </div>
