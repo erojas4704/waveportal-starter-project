@@ -1,0 +1,19 @@
+.story{
+    display: flex;
+    color: rgb(0, 76, 175);
+    margin-top: 2rem;
+    flex-direction: row;
+}
+
+.story-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 600px;
+    margin-left: 2rem;
+}
+
+.quote{
+    opacity: 0.4;
+    font-size: 0.5rem;
+}

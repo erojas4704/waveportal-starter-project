@@ -1,0 +1,9 @@
+/** A spinning icon that can be used with the `Spinner` component */
+.spinner {
+    animation: spin .4s ease-in-out infinite;
+    font-size: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
